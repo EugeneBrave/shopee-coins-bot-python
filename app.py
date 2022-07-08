@@ -1,5 +1,7 @@
 # from lib2to3.pgen2 import driver
 import os
+import pickle
+from os.path import exists
 from argparse import ArgumentParser
 import txt
 import config
@@ -64,10 +66,14 @@ wait = browser.wait
 def tryLogin():
     global driver
     global wait
+    driver.get(config.URL_LOGIN)
+    WebDriverWait(driver, 5).until(EC.url_changes(config.URL_LOGIN))
     curUrl = driver.current_url
     if curUrl == config.URL_COIN:
         print("Already logged in.")
+        return
     else:
+        print("Try to login by username and password.")
         inputUsername = wait.until(
             EC.presence_of_element_located((By.NAME, "loginKey"))
         )
@@ -182,7 +188,25 @@ def tryLoginWithSmsLink():
     return exitCode.LOGIN_DENIED
 
 
+def loadCookies():
+    global driver
+    driver.get(config.URL_HOME)
+    with open("cookies.pkl", "rb") as cookiesfile:
+        cookies = pickle.load(cookiesfile)
+        for cookie in cookies:
+            driver.add_cookie(cookie)
+
+
+def saveCookies():
+    global driver
+    with open("cookies.pkl", "wb") as filehandler:
+        pickle.dump(driver.get_cookies(), filehandler)
+
+
 def runBot():
+
+    loadCookies()
+
     result = tryLogin()
 
     if result == exitCode.NEED_SMS_AUTH:
@@ -191,6 +215,7 @@ def runBot():
     if result != None:
         return result
 
+    saveCookies()
     result = tryReceiveCoin()
     return result
 
