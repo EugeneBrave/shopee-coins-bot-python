@@ -36,11 +36,6 @@ class Browser:
         self.wait = WebDriverWait(self.driver, config.TIMEOUT_OPERATION)
 
 
-browser = Browser("chrome")
-driver = browser.driver
-wait = browser.wait
-
-
 def tryLogin(browser, username, password):
     driver = browser.driver
     wait = browser.wait
@@ -167,12 +162,12 @@ def tryLoginWithSmsLink(browser):
 
 
 def loadCookies(browser):
-    browser.driver
-    browser.driver.get(config.URL_HOME)
-    with open("cookies.pkl", "rb") as cookiesfile:
-        cookies = pickle.load(cookiesfile)
-        for cookie in cookies:
-            browser.driver.add_cookie(cookie)
+    if os.path.exists("cookies.pkl"):
+        browser.driver.get(config.URL_HOME)
+        with open("cookies.pkl", "rb") as cookiesfile:
+            cookies = pickle.load(cookiesfile)
+            for cookie in cookies:
+                browser.driver.add_cookie(cookie)
     return browser
 
 
@@ -182,7 +177,6 @@ def saveCookies(browser):
 
 
 def runBot(args):
-
     os.environ["GH_TOKEN"] = args.GH_TOKEN
 
     browser = loadCookies(Browser("firefox"))
@@ -195,6 +189,6 @@ def runBot(args):
     if result != None:
         return result
 
-    saveCookies(browser)
     result = tryReceiveCoin(browser)
+    saveCookies(browser)
     return result
