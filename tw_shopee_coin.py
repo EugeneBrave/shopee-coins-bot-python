@@ -1,46 +1,18 @@
-import os
-import pickle
-import txt
-import config
-import exitCode
-from selenium import webdriver
+import os, txt, config, exitCode, cookies
+from browser import Browser
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options as OpsC
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.firefox.options import Options as OpsF
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.chrome import ChromeDriverManager
-
-
-class Browser:
-    def __init__(self, name):
-        if name == "firefox":
-            options = OpsF()
-            options.add_argument("--no-sandbox")
-            options.add_argument("--headless")
-            options.set_preference("network.http.spdy.enabled.http2", False)
-            self.driver = webdriver.Firefox(
-                service=Service(GeckoDriverManager().install()),
-                options=options,
-            )
-        elif name == "chrome":
-            coptions = OpsC()
-            coptions.add_argument("--headless")
-            coptions.add_argument("--disable-notifications")
-            self.driver = webdriver.Chrome(
-                ChromeDriverManager().install(), chrome_options=coptions
-            )
-        self.driver.get(config.URL_LOGIN)
-        self.wait = WebDriverWait(self.driver, config.TIMEOUT_OPERATION)
 
 
 def tryLogin(browser, username, password):
     driver = browser.driver
     wait = browser.wait
     driver.get(config.URL_LOGIN)
-    WebDriverWait(driver, 5).until(EC.url_changes(config.URL_LOGIN))
+    try:
+        WebDriverWait(driver, 5).until(EC.url_changes(config.URL_LOGIN))
+    except:
+        pass
     curUrl = driver.current_url
     if curUrl == config.URL_COIN:
         print("Already logged in.")
@@ -161,25 +133,10 @@ def tryLoginWithSmsLink(browser):
     return exitCode.LOGIN_DENIED
 
 
-def loadCookies(browser):
-    if os.path.exists("cookies.pkl"):
-        browser.driver.get(config.URL_HOME)
-        with open("cookies.pkl", "rb") as cookiesfile:
-            cookies = pickle.load(cookiesfile)
-            for cookie in cookies:
-                browser.driver.add_cookie(cookie)
-    return browser
-
-
-def saveCookies(browser):
-    with open("cookies.pkl", "wb") as filehandler:
-        pickle.dump(browser.driver.get_cookies(), filehandler)
-
-
 def runBot(args):
     os.environ["GH_TOKEN"] = args.GH_TOKEN
 
-    browser = loadCookies(Browser("firefox"))
+    browser = cookies.loadCookies(Browser("remote"), args.cookiepath)
 
     result = tryLogin(browser, args.username, args.password)
 
@@ -190,5 +147,5 @@ def runBot(args):
         return result
 
     result = tryReceiveCoin(browser)
-    saveCookies(browser)
+    cookies.saveCookies(browser, args.cookiepath)
     return result

@@ -11,6 +11,11 @@ parser.add_argument(
 parser.add_argument(
     "-t", "--ghtoken", dest="GH_TOKEN", help="GH_TOKEN", metavar="STRING"
 )
+
+parser.add_argument(
+    "-cp", "--cookiepath", dest="cookiepath", help="cookie path", metavar="STRING"
+)
+
 args = parser.parse_args()
 
 if __name__ == "__main__":
