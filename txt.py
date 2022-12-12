@@ -1,5 +1,6 @@
 USE_LINK = "使用連結驗證"
 RECEIVE_COIN = "今日簽到獲得"
+RECEIVE_COIN2 = "完成實名認證領蝦幣"
 SHOPEE_REWARD = "蝦幣獎勵"
 TOO_MUCH_TRY = "您已達到今日驗證次數上限。"
 COIN_RECEIVED = "明天再回來領取"

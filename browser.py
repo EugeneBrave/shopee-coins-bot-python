@@ -8,7 +8,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 
 class Browser:
-    def __init__(self, name):
+    def __init__(self, name, ip=""):
         if name == "firefox":
             options = OpsF()
             options.add_argument("--no-sandbox")
@@ -27,10 +27,10 @@ class Browser:
             )
         elif name == "remote":
             roptions = webdriver.ChromeOptions()
-            roptions.add_argument("--headless")
-            roptions.add_argument("--disable-notifications")
+            prefs = {"profile.default_content_setting_values.notifications" : 2}
+            roptions.add_experimental_option("prefs",prefs)
             self.driver = webdriver.Remote(
-                command_executor='http://192.168.11.8:4444',
+                command_executor=ip,
                 options=roptions
             )
         self.driver.get(config.URL_LOGIN)

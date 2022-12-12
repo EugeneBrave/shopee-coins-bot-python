@@ -18,71 +18,78 @@ def tryLogin(browser, username, password):
         print("Already logged in.")
         return
     else:
-        print("Try to login by username and password.")
-        inputUsername = wait.until(
-            EC.presence_of_element_located((By.NAME, "loginKey"))
-        )
-        inputUsername.send_keys(username)
-        inputPassword = wait.until(
-            EC.presence_of_element_located((By.NAME, "password"))
-        )
-        inputPassword.send_keys(password)
-        btnLogin = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//button[text()='登入']"))
-        )
-        btnLogin.click()
-        print("Login form submitted. Waiting for redirect.")
+        try:
+            print("Try to login by username and password.")
+            inputUsername = wait.until(
+                EC.presence_of_element_located((By.NAME, "loginKey"))
+            )
+            inputUsername.send_keys(username)
+            inputPassword = wait.until(
+                EC.presence_of_element_located((By.NAME, "password"))
+            )
+            inputPassword.send_keys(password)
+            btnLogin = wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//button[text()='登入']"))
+            )
+            btnLogin.click()
+            print("Login form submitted. Waiting for redirect.")
 
-        xpath = f"//div[contains(text(),'{txt.WRONG_PASSWORDS[0]}') or contains(text(),'{txt.WRONG_PASSWORDS[1]}') or contains(text(),'{txt.WRONG_PASSWORDS[2]}') or contains(text(),'{txt.USE_LINK}') or contains(text(),'{txt.TOO_MUCH_TRY}') or contains(text(),'{txt.SHOPEE_REWARD}') or contains(text(),'{txt.EMAIL_AUTH}')] | //button[text()='{txt.PLAY_PUZZLE}']"
-        result = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            xpath = f"//div[contains(text(),'{txt.WRONG_PASSWORDS[0]}') or contains(text(),'{txt.WRONG_PASSWORDS[1]}') or contains(text(),'{txt.WRONG_PASSWORDS[2]}') or contains(text(),'{txt.USE_LINK}') or contains(text(),'{txt.TOO_MUCH_TRY}') or contains(text(),'{txt.SHOPEE_REWARD}') or contains(text(),'{txt.EMAIL_AUTH}')] | //button[text()='{txt.PLAY_PUZZLE}']"
+            result = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
 
-        text = result.text
-        print(text)
+            text = result.text
+            print(text)
 
-        t = driver.get_screenshot_as_file("result.png")
-        print("截圖結果: %s" % t)
-        if text == txt.SHOPEE_REWARD:
-            # login succeeded
-            print("Login succeeded.")
-            return
-        if text in txt.WRONG_PASSWORDS:
-            # wrong password
-            print("Login failed: wrong password.")
-            return exitCode.WRONG_PASSWORD
-        if text == txt.PLAY_PUZZLE:
-            # need to play puzzle
-            print("Login failed: I cannot solve the puzzle.")
-            return exitCode.CANNOT_SOLVE_PUZZLE
-        if text == txt.USE_LINK:
-            # need to authenticate via SMS link
-            print("Login failed: please login via SMS.")
-            return exitCode.NEED_SMS_AUTH
-        if text == txt.EMAIL_AUTH:
-            # need to authenticate via email; this is currently not supported
-            print("Login failed: need email Auth")
-            return exitCode.NEED_EMAIL_AUTH
+            t = driver.get_screenshot_as_file("/result.png")
+            print("截圖結果: %s" % t)
+            if text == txt.SHOPEE_REWARD:
+                # login succeeded
+                print("Login succeeded.")
+                return
+            if text in txt.WRONG_PASSWORDS:
+                # wrong password
+                print("Login failed: wrong password.")
+                return exitCode.WRONG_PASSWORD
+            if text == txt.PLAY_PUZZLE:
+                # need to play puzzle
+                print("Login failed: I cannot solve the puzzle.")
+                return exitCode.CANNOT_SOLVE_PUZZLE
+            if text == txt.USE_LINK:
+                # need to authenticate via SMS link
+                print("Login failed: please login via SMS.")
+                return exitCode.NEED_SMS_AUTH
+            if text == txt.EMAIL_AUTH:
+                # need to authenticate via email; this is currently not supported
+                print("Login failed: need email Auth")
+                return exitCode.NEED_EMAIL_AUTH
+        except Exception as e:
+            print(e)
+
 
 
 def tryReceiveCoin(browser):
     driver = browser.driver
     wait = browser.wait
-    xpath = f"//button[contains(text(),'{txt.RECEIVE_COIN}') or contains(text(),'{txt.COIN_RECEIVED}')]"
-    wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
-    btnReceiveCoin = driver.find_element(By.XPATH, xpath)
+    try:
+        xpath = f"//button[contains(text(),'{txt.RECEIVE_COIN}') or contains(text(),'{txt.RECEIVE_COIN2}') or contains(text(),'{txt.COIN_RECEIVED}')]"
+        wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+        btnReceiveCoin = driver.find_element(By.XPATH, xpath)
 
-    text = btnReceiveCoin.text
-    if text.startswith(txt.COIN_RECEIVED):
-        print("Coin already received.")
-        return exitCode.ALREADY_RECEIVED
-    btnReceiveCoin.click()
-    wait.until(
-        EC.presence_of_element_located(
-            (By.XPATH, f"//button[contains(text(),'{txt.COIN_RECEIVED}')]")
+        text = btnReceiveCoin.text
+        if text.startswith(txt.COIN_RECEIVED):
+            print("Coin already received.")
+            return exitCode.ALREADY_RECEIVED
+        btnReceiveCoin.click()
+        wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, f"//button[contains(text(),'{txt.COIN_RECEIVED}')]")
+            )
         )
-    )
 
-    print("Coin received.")
-    return exitCode.SUCCESS
+        print("Coin received.")
+        return exitCode.SUCCESS
+    except:
+        return exitCode.RECEIVE_COIN_FAILED
 
 
 def tryLoginWithSmsLink(browser):
@@ -134,9 +141,9 @@ def tryLoginWithSmsLink(browser):
 
 
 def runBot(args):
-    os.environ["GH_TOKEN"] = args.GH_TOKEN
+    #os.environ["GH_TOKEN"] = args.GH_TOKEN
 
-    browser = cookies.loadCookies(Browser("remote"), args.cookiepath)
+    browser = cookies.loadCookies(Browser(args.webdriver, args.remoteip), args.cookiepath)
 
     result = tryLogin(browser, args.username, args.password)
 
